@@ -83,7 +83,7 @@ RUN tar xzf tor-$TOR_VERSION.tar.gz \
   && ./configure \
   --enable-static-tor \
   --with-openssl-dir=/usr/local/lib \
-  --with-zlib-dir=/lib \
+  --with-zlib-dir=/usr/local/lib \
   --with-libevent-dir=/usr/local/lib \
   && make
 
