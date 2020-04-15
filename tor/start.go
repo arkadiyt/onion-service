@@ -14,12 +14,12 @@ func main() {
 		panic(err)
 	}
 
-	ipAddrs, err := net.LookupHost("nginx-pi")
+	ipAddrs, err := net.LookupHost("nginx")
 	if err != nil {
 		panic(err)
 	}
 	if len(ipAddrs) == 0 {
-		panic("could not resolve nginx-pi")
+		panic("could not resolve nginx")
 	}
 
 	file = bytes.Replace(file, []byte("$NGINX_IP_ADDRESS$"), []byte(ipAddrs[0]), 1)
