@@ -1,15 +1,17 @@
 FROM alpine:latest as builder
 
 ARG LIBEVENT_VERSION
+ARG OPENSSL_VERSION
 ARG TOR_USER
 ARG TOR_VERSION
+ARG ZLIB_VERSION
 
 #
 # Base packages for compiling/building/etc
 #
 
 RUN apk add \
-  build-base autoconf automake libtool openssl-dev zlib-dev gnupg git go ca-certificates
+  build-base autoconf automake libtool openssl-dev zlib-dev gnupg git go ca-certificates linux-headers
 
 #
 # Download/compile libevent (a Tor dependency)
@@ -31,6 +33,40 @@ RUN tar xzf libevent-$LIBEVENT_VERSION-stable.tar.gz \
   && make install
 
 #
+# Download/compile openssl
+#
+
+COPY openssl.pgp.pub .
+RUN wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz \
+  https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz.asc \
+  && gpg --import openssl.pgp.pub \
+  && gpg --verify openssl-$OPENSSL_VERSION.tar.gz.asc openssl-$OPENSSL_VERSION.tar.gz \
+  && rm -rf ~/.gnupg/pubring.gpg
+
+RUN tar zxf openssl-$OPENSSL_VERSION.tar.gz \
+  && cd openssl-$OPENSSL_VERSION \
+  && ./config \
+  && make \
+  && make install
+
+#
+# Download/compile zlib
+#
+
+COPY zlib.pgp.pub .
+RUN wget https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz \
+  https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz.asc \
+  && gpg --import zlib.pgp.pub \
+  && gpg --verify zlib-$ZLIB_VERSION.tar.gz.asc zlib-$ZLIB_VERSION.tar.gz \
+  && rm -rf ~/.gnupg/pubring.gpg
+
+RUN tar zxf zlib-$ZLIB_VERSION.tar.gz \
+  && cd zlib-$ZLIB_VERSION \
+  && ./configure \
+  && make \
+  && make install
+
+#
 # Download/verify/compile Tor
 #
 
@@ -46,7 +82,7 @@ RUN tar xzf tor-$TOR_VERSION.tar.gz \
   && cd tor-$TOR_VERSION \
   && ./configure \
   --enable-static-tor \
-  --with-openssl-dir=/usr/lib \
+  --with-openssl-dir=/usr/local/lib \
   --with-zlib-dir=/lib \
   --with-libevent-dir=/usr/local/lib \
   && make
